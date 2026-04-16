@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+frontend/.next/
+frontend/out/
+smart-contracts/artifacts/
+smart-contracts/cache/
+
+# Environment files (contain secrets like Pinata JWT)
+.env
+.env.local
+.env*.local
+frontend/.env*
+
+# IDE / OS files
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Misc
+.vercel
+coverage/
