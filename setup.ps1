@@ -15,13 +15,54 @@ param(
 $ErrorActionPreference = "Stop"
 $ROOT = $PSScriptRoot
 
-# ── Colours & helpers ────────────────────────────────────────
-function Write-Step  { param([string]$msg) Write-Host "`n▸ $msg" -ForegroundColor Cyan }
-function Write-Ok    { param([string]$msg) Write-Host "  ✔ $msg" -ForegroundColor Green }
-function Write-Warn  { param([string]$msg) Write-Host "  ⚠ $msg" -ForegroundColor Yellow }
-function Write-Err   { param([string]$msg) Write-Host "  ✖ $msg" -ForegroundColor Red }
+# In PowerShell 7+, native command stderr can be promoted to terminating errors.
+# We handle failures via explicit $LASTEXITCODE checks instead.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
 
-# ── 1. Pre-requisite checks ─────────────────────────────────
+# -- Colours & helpers ----------------------------------------
+function Write-Step {
+    param([string]$msg)
+    Write-Host "`n> $msg" -ForegroundColor Cyan
+}
+
+function Write-Ok {
+    param([string]$msg)
+    Write-Host "  [OK] $msg" -ForegroundColor Green
+}
+
+function Write-Warn {
+    param([string]$msg)
+    Write-Host "  [WARN] $msg" -ForegroundColor Yellow
+}
+
+function Write-Err {
+    param([string]$msg)
+    Write-Host "  [ERROR] $msg" -ForegroundColor Red
+}
+
+function Invoke-NativeSafe {
+    param(
+        [ScriptBlock]$Command,
+        [string]$FailureMessage
+    )
+
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $Command
+    }
+    finally {
+        $ErrorActionPreference = $previousPreference
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "$FailureMessage (exit code $LASTEXITCODE)"
+    }
+}
+
+# -- 1. Pre-requisite checks ---------------------------------
 Write-Step "Checking pre-requisites..."
 
 # Node.js
@@ -70,11 +111,13 @@ Write-Host "  DApp Certificate Verification - Setup"     -ForegroundColor Magent
 Write-Host "============================================" -ForegroundColor Magenta
 Write-Host ""
 
-# ── 2. Install Smart-Contract dependencies ───────────────────
+# -- 2. Install Smart-Contract dependencies -------------------
 Write-Step "Installing smart-contract dependencies..."
 Push-Location "$ROOT\smart-contracts"
 try {
-    npm install 2>&1 | Out-Null
+    Invoke-NativeSafe -FailureMessage "Failed to install smart-contract dependencies." -Command {
+        npm install 2>&1 | Out-Null
+    }
     Write-Ok "smart-contracts/node_modules installed."
 }
 catch {
@@ -84,11 +127,13 @@ catch {
 }
 Pop-Location
 
-# ── 3. Install Frontend dependencies ────────────────────────
+# -- 3. Install Frontend dependencies -------------------------
 Write-Step "Installing frontend dependencies..."
 Push-Location "$ROOT\frontend"
 try {
-    npm install 2>&1 | Out-Null
+    Invoke-NativeSafe -FailureMessage "Failed to install frontend dependencies." -Command {
+        npm install 2>&1 | Out-Null
+    }
     Write-Ok "frontend/node_modules installed."
 }
 catch {
@@ -98,11 +143,13 @@ catch {
 }
 Pop-Location
 
-# ── 4. Compile Solidity contracts ────────────────────────────
+# -- 4. Compile Solidity contracts ----------------------------
 Write-Step "Compiling Solidity smart contracts..."
 Push-Location "$ROOT\smart-contracts"
 try {
-    npx hardhat compile 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+    Invoke-NativeSafe -FailureMessage "Contract compilation failed." -Command {
+        npx hardhat compile 2>&1 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+    }
     Write-Ok "Contracts compiled successfully."
 }
 catch {
@@ -112,7 +159,7 @@ catch {
 }
 Pop-Location
 
-# ── 5. Copy ABI to frontend ─────────────────────────────────
+# -- 5. Copy ABI to frontend ---------------------------------
 Write-Step "Copying contract ABI to frontend..."
 $abiSource = "$ROOT\smart-contracts\artifacts\contracts\CredentialSBT.sol\CredentialSBT.json"
 $abiDest   = "$ROOT\frontend\src\app\CredentialSBT.json"
@@ -142,7 +189,7 @@ if ($InstallOnly) {
     exit 0
 }
 
-# ── 6. Start Hardhat local blockchain node ───────────────────
+# -- 6. Start Hardhat local blockchain node -------------------
 Write-Step "Starting Hardhat local blockchain node..."
 $hardhatJob = Start-Job -ScriptBlock {
     param($dir)
@@ -165,11 +212,13 @@ else {
     exit 1
 }
 
-# ── 7. Deploy contracts ─────────────────────────────────────
+# -- 7. Deploy contracts --------------------------------------
 Write-Step "Deploying CredentialSBT contract to local network..."
 Push-Location "$ROOT\smart-contracts"
 try {
-    $deployOutput = npx hardhat run scripts/deploy.js --network localhost 2>&1
+    $deployOutput = Invoke-NativeSafe -FailureMessage "Deployment failed." -Command {
+        npx hardhat run scripts/deploy.js --network localhost 2>&1
+    }
     $deployOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
     
     # Try to extract the contract address from deploy output
@@ -192,7 +241,7 @@ catch {
 }
 Pop-Location
 
-# ── 8. Start Frontend dev server ─────────────────────────────
+# -- 8. Start Frontend dev server -----------------------------
 Write-Step "Starting Next.js frontend dev server..."
 $frontendJob = Start-Job -ScriptBlock {
     param($dir)
@@ -203,22 +252,22 @@ $frontendJob = Start-Job -ScriptBlock {
 Write-Ok "Frontend dev server starting in background (Job ID: $($frontendJob.Id))..."
 Start-Sleep -Seconds 5
 
-# ── 9. Summary ───────────────────────────────────────────────
+# -- 9. Summary -----------------------------------------------
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
-Write-Host "  🎉 Setup Complete!"                        -ForegroundColor Green
+Write-Host "  Setup Complete!"                         -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Services running:" -ForegroundColor White
-Write-Host "    • Hardhat Node    →  http://127.0.0.1:8545  (Job $($hardhatJob.Id))" -ForegroundColor Cyan
-Write-Host "    • Next.js Frontend →  http://localhost:3000  (Job $($frontendJob.Id))" -ForegroundColor Cyan
+Write-Host "    - Hardhat Node    -> http://127.0.0.1:8545  (Job $($hardhatJob.Id))" -ForegroundColor Cyan
+Write-Host "    - Next.js Frontend -> http://localhost:3000  (Job $($frontendJob.Id))" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  MetaMask Setup:" -ForegroundColor White
 Write-Host "    1. Add a custom network in MetaMask:" -ForegroundColor DarkGray
-Write-Host "       • Network Name : Hardhat Local"    -ForegroundColor DarkGray
-Write-Host "       • RPC URL      : http://127.0.0.1:8545" -ForegroundColor DarkGray
-Write-Host "       • Chain ID     : 31337"             -ForegroundColor DarkGray
-Write-Host "       • Currency     : ETH"               -ForegroundColor DarkGray
+Write-Host "       - Network Name : Hardhat Local"    -ForegroundColor DarkGray
+Write-Host "       - RPC URL      : http://127.0.0.1:8545" -ForegroundColor DarkGray
+Write-Host "       - Chain ID     : 31337"             -ForegroundColor DarkGray
+Write-Host "       - Currency     : ETH"               -ForegroundColor DarkGray
 Write-Host "    2. Import Account #0 private key from the Hardhat node output" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "  To stop services:" -ForegroundColor Yellow

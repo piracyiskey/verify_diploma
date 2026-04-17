@@ -5,8 +5,7 @@ import { ethers } from 'ethers';
 import CryptoJS from 'crypto-js';
 // @ts-ignore
 import contractData from '@/utils/CredentialSBT.json';
-
-const CONTRACT_ADDRESS = "0x2706A171ECb68E0038378D40Dd1d136361d0cB7d";
+import { CONTRACT_ADDRESS } from '@/utils/contractAddress';
 
 export default function VerifyPage() {
   const [tokenId, setTokenId] = useState('');

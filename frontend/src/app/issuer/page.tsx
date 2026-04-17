@@ -6,8 +6,7 @@ import CryptoJS from 'crypto-js';
 import WalletConnect from '@/components/WalletConnect';
 // We will assume the contract address is available locally, we can deploy it later in demo script
 import contractData from '@/utils/CredentialSBT.json';
-
-const CONTRACT_ADDRESS = "0x2706A171ECb68E0038378D40Dd1d136361d0cB7d"; // Local hardhat network first account deployed contract
+import { CONTRACT_ADDRESS } from '@/utils/contractAddress';
 
 export default function IssuerPortal() {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);

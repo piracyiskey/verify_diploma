@@ -1,7 +1,7 @@
 import hre from "hardhat";
 
 async function main() {
-  const CONTRACT_ADDRESS = "0x2706A171ECb68E0038378D40Dd1d136361d0cB7d";
+  const CONTRACT_ADDRESS = "0x1Eb835EB7BEEEE9E6bbFe08F16a2d2eF668204bd";
   const CredentialSBT = await hre.ethers.getContractAt("CredentialSBT", CONTRACT_ADDRESS);
   const code = await hre.ethers.provider.getCode(CONTRACT_ADDRESS);
   console.log("Contract code:", code.length > 2 ? "Exists" : "Empty");
