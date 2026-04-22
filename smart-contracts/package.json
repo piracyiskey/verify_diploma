@@ -30,5 +30,8 @@
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
     "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }

@@ -1,36 +1,53 @@
 import hre from "hardhat";
 
 async function main() {
-  // We use the 6th testing account (Account #5) to deploy so we get a completely fresh, 
-  // unflagged address that MetaMask won't complain about.
   const signers = await hre.ethers.getSigners();
-  const deployer = signers[5]; 
-  const issuer = signers[0];   // We will still grant Issuer role to Account 0 so user doesn't have to change MetaMask accounts
+  const networkName = hre.network.name;
 
-  console.log("Deploying CredentialSBT with the 6th fresh account:", deployer.address);
+  let deployer, issuerAddress;
+
+  if (networkName === "sepolia") {
+    // On Sepolia, there's only one signer (from the private key in .env)
+    // That same account is both deployer AND issuer
+    deployer = signers[0];
+    issuerAddress = deployer.address;
+    console.log(`Deploying to SEPOLIA with account: ${deployer.address}`);
+  } else {
+    // On local Hardhat, use Account #5 to deploy (avoids MetaMask nonce issues)
+    // and grant issuer role to Account #0
+    deployer = signers[5];
+    issuerAddress = signers[0].address;
+    console.log(`Deploying to LOCAL with account: ${deployer.address}`);
+  }
 
   const CredentialSBT = await hre.ethers.getContractFactory("CredentialSBT", deployer);
-  // Deploying and setting the fresh deployer as the default admin
   const credentialSBT = await CredentialSBT.deploy(deployer.address);
   await credentialSBT.waitForDeployment();
   const contractAddress = await credentialSBT.getAddress();
 
-  console.log("CredentialSBT deployed successfully to a SAFE address:", contractAddress);
+  console.log(`CredentialSBT deployed to: ${contractAddress}`);
 
-  // Grant the ISSUER_ROLE to the first Hardhat account (which the user already imported into MetaMask)
+  // Grant ISSUER_ROLE to the issuer address
   const ISSUER_ROLE = await credentialSBT.ISSUER_ROLE();
-  await credentialSBT.connect(deployer).grantRole(ISSUER_ROLE, issuer.address);
-  
-  console.log(`Granted ISSUER_ROLE to Account #0: ${issuer.address}`);
+  const tx = await credentialSBT.connect(deployer).grantRole(ISSUER_ROLE, issuerAddress);
+  await tx.wait();
+  console.log(`Granted ISSUER_ROLE to: ${issuerAddress}`);
 
   console.log(`
 ===================================================
 Setup Complete!
 
-The contract is deployed. 
-Make sure your frontend's CONTRACT_ADDRESS points to:
-${contractAddress}
+Network:          ${networkName}
+Contract Address: ${contractAddress}
+Issuer Address:   ${issuerAddress}
+
+Update your frontend .env.local:
+NEXT_PUBLIC_CONTRACT_ADDRESS="${contractAddress}"
 ===================================================`);
+
+  if (networkName === "sepolia") {
+    console.log(`\nView on Etherscan: https://sepolia.etherscan.io/address/${contractAddress}`);
+  }
 }
 
 main().catch((error) => {

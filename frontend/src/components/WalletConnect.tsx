@@ -8,6 +8,27 @@ export default function WalletConnect({ onConnect }: { onConnect: (address: stri
 
   useEffect(() => {
     checkConnection();
+
+    // Listen for MetaMask account or network changes
+    if (typeof window.ethereum !== 'undefined') {
+      const handleAccountsChanged = () => checkConnection();
+      const handleChainChanged = () => window.location.reload();
+
+      // @ts-ignore
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      // @ts-ignore
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        // @ts-ignore
+        if (window.ethereum.removeListener) {
+          // @ts-ignore
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          // @ts-ignore
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
   }, []);
 
   const checkConnection = async () => {
