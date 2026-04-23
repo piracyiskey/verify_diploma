@@ -18,6 +18,8 @@ export default function IssuerPortal() {
   // Form State
   const [studentAddress, setStudentAddress] = useState('');
   const [studentName, setStudentName] = useState('');
+  const [ssn, setSsn] = useState('');
+  const [gpa, setGpa] = useState('');
   const [institution, setInstitution] = useState('');
   const [major, setMajor] = useState('');
   const [gradYear, setGradYear] = useState('');
@@ -75,6 +77,8 @@ export default function IssuerPortal() {
       // Encrypt sensitive data (AES)
       setStatus({ type: 'success', message: 'Encrypting sensitive data...' });
       const encryptedName = CryptoJS.AES.encrypt(studentName, 'TRUSTCHAIN_AES_KEY_2026').toString();
+      const encryptedSsn = CryptoJS.AES.encrypt(ssn, 'TRUSTCHAIN_AES_KEY_2026').toString();
+      const encryptedGpa = CryptoJS.AES.encrypt(gpa, 'TRUSTCHAIN_AES_KEY_2026').toString();
 
       const metadataObj = {
         name: `Credential for ${major}`,
@@ -85,6 +89,8 @@ export default function IssuerPortal() {
           { trait_type: "Major/Program", value: major },
           { trait_type: "Graduation Year", value: gradYear },
           { trait_type: "Encrypted Identity", value: encryptedName },
+          { trait_type: "Social Security Number", value: encryptedSsn },
+          { trait_type: "GPA", value: encryptedGpa },
           { trait_type: "File Hash", value: fileHash }
         ]
       };
@@ -144,6 +150,7 @@ export default function IssuerPortal() {
 
       {signer && isIssuer !== false && (
         <form onSubmit={handleIssue}>
+          <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Personal Information</h3>
           <div className="form-group">
             <label>Student Wallet Address</label>
             <input required type="text" className="form-input" placeholder="0x..." value={studentAddress} onChange={(e) => setStudentAddress(e.target.value)} />
@@ -152,6 +159,16 @@ export default function IssuerPortal() {
             <label>Student Name (Sensitive - Will be encrypted via AES)</label>
             <input required type="text" className="form-input" placeholder="John Doe" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
           </div>
+          <div className="form-group">
+            <label>Social Security Number (Sensitive - Will be encrypted via AES)</label>
+            <input required type="text" className="form-input" placeholder="XXX-XX-XXXX" value={ssn} onChange={(e) => setSsn(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>GPA (Sensitive - Will be encrypted via AES)</label>
+            <input required type="number" step="0.01" className="form-input" placeholder="4.0" value={gpa} onChange={(e) => setGpa(e.target.value)} />
+          </div>
+
+          <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '2rem' }}>Institution Information</h3>
           <div className="form-group">
             <label>Institution Name</label>
             <input required type="text" className="form-input" value={institution} onChange={(e) => setInstitution(e.target.value)} />

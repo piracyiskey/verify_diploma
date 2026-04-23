@@ -30,7 +30,8 @@ contract CredentialSBT is ERC721URIStorage, AccessControl {
      * @dev Issues a new credential SBT to a given address.
      */
     function issueCredential(address to, string memory uri) external onlyIssuer returns (uint256) {
-        uint256 tokenId = _nextTokenId++;
+        // Generate a complex and unique token ID
+        uint256 tokenId = uint256(keccak256(abi.encodePacked(to, uri, block.timestamp, _nextTokenId++)));
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
 

@@ -21,6 +21,8 @@ export default function PortfolioPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const fetchCredentials = async (addr: string, provider: ethers.Provider) => {
     setLoading(true);
     setCredentials([]);
@@ -102,11 +104,25 @@ export default function PortfolioPage() {
       )}
 
       <div className="credential-grid">
-        {credentials.map(c => (
-           <div key={c.tokenId} className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+        {credentials.map(c => {
+          const fullHexId = "0x" + BigInt(c.tokenId).toString(16);
+          return (
+            <div key={c.tokenId} className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span className="wallet-badge" style={{ background: 'var(--surface)', color: 'var(--text)', display: 'inline-flex', alignItems: 'center' }}>
-                  ID: #{c.tokenId}
+                <span 
+                   className="wallet-badge" 
+                   style={{ background: 'var(--surface)', color: 'var(--text)', display: 'inline-flex', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                   title="Click to copy full ID"
+                   onClick={() => {
+                     navigator.clipboard.writeText(fullHexId);
+                     setCopiedId(c.tokenId);
+                     setTimeout(() => setCopiedId(null), 2000);
+                   }}
+                >
+                  ID: {fullHexId.substring(0, 10)}... 
+                  <span style={{ marginLeft: '0.5rem', opacity: 0.8 }}>
+                    {copiedId === c.tokenId ? "✅ Copied" : "📋"}
+                  </span>
                 </span>
                 {c.isValid ? (
                   <span className="wallet-badge" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', margin: 0, padding: '0.2rem 0.8rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: 'none' }}>Valid</span>
@@ -122,7 +138,8 @@ export default function PortfolioPage() {
                <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                   {c.metadata.attributes.map((attr: any, i: number) => {
                     let displayValue = attr.value;
-                    if (attr.trait_type === "Encrypted Identity") {
+                    const encryptedFields = ["Encrypted Identity", "Social Security Number", "GPA"];
+                    if (encryptedFields.includes(attr.trait_type)) {
                         try {
                            const bytes = CryptoJS.AES.decrypt(attr.value, 'TRUSTCHAIN_AES_KEY_2026');
                            displayValue = bytes.toString(CryptoJS.enc.Utf8) + " (Decrypted)";
@@ -146,7 +163,7 @@ export default function PortfolioPage() {
                 </a>
              )}
            </div>
-        ))}
+        )})}
       </div>
     </div>
   );

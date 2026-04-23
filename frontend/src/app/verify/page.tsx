@@ -71,14 +71,13 @@ export default function VerifyPage() {
       <div className="glass-panel" style={{ marginBottom: '2rem' }}>
         <form onSubmit={handleVerify} style={{ display: 'flex', gap: '1rem' }}>
           <input 
-            type="number" 
+            type="text" 
             className="form-input" 
-            placeholder="Enter Credential ID (e.g. 0)" 
+            placeholder="Enter Credential ID (e.g. 0x8f3c... or integer)" 
             value={tokenId}
             onChange={e => setTokenId(e.target.value)}
             style={{ flex: 1 }}
             required
-            min="0"
           />
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Verifying...' : 'Verify Now'}
@@ -122,7 +121,8 @@ export default function VerifyPage() {
                 
                 {result.metadata.attributes?.map((attr: any, i: number) => {
                   let displayValue = attr.value;
-                  if (attr.trait_type === "Encrypted Identity") {
+                  const encryptedFields = ["Encrypted Identity", "Social Security Number", "GPA"];
+                  if (encryptedFields.includes(attr.trait_type)) {
                       try {
                           const bytes = CryptoJS.AES.decrypt(attr.value, 'TRUSTCHAIN_AES_KEY_2026');
                           displayValue = bytes.toString(CryptoJS.enc.Utf8) + " (Decrypted ✅)";
