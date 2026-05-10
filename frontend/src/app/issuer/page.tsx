@@ -14,6 +14,7 @@ export default function IssuerPortal() {
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [isIssuer, setIsIssuer] = useState<boolean | null>(null);
   const [debugError, setDebugError] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'issue' | 'revoke'>('issue');
 
   // Form State
   const [studentAddress, setStudentAddress] = useState('');
@@ -24,6 +25,9 @@ export default function IssuerPortal() {
   const [major, setMajor] = useState('');
   const [gradYear, setGradYear] = useState('');
   const [file, setFile] = useState<File | null>(null);
+
+  // Revoke State
+  const [revokeTokenId, setRevokeTokenId] = useState('');
 
   const handleConnect = async (address: string, s: ethers.Signer) => {
     setSigner(s);
@@ -123,14 +127,65 @@ export default function IssuerPortal() {
     }
   };
 
+  const handleRevoke = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signer || !revokeTokenId) return;
+
+    const confirmed = window.confirm(`WARNING: Are you sure you want to permanently revoke Credential ID ${revokeTokenId}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    setLoading(true);
+    setStatus(null);
+
+    try {
+      setStatus({ type: 'success', message: 'Initiating revocation transaction...' });
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractData.abi, signer);
+      const tx = await contract.revokeCredential(revokeTokenId);
+      await tx.wait();
+
+      setStatus({ type: 'success', message: `Credential ID ${revokeTokenId} has been successfully and permanently revoked! TX: ${tx.hash}` });
+      setRevokeTokenId(''); // clear the input
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'INVALID_ARGUMENT') {
+         setStatus({ type: 'error', message: "Invalid Input: Please enter a valid numerical Token ID." });
+      } else if (err.message.includes("already revoked")) {
+         setStatus({ type: 'error', message: "Invalid Action: This Credential has already been permanently revoked." });
+      } else if (err.message.includes("Credential does not exist") || err.message.includes("ERC721NonexistentToken") || err.code === 'CALL_EXCEPTION' || err.message.includes("unknown custom error")) {
+         setStatus({ type: 'error', message: "Invalid Credential: This Token ID does not exist on the blockchain." });
+      } else {
+         setStatus({ type: 'error', message: err.message || 'Failed to revoke credential' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="glass-panel" style={{ maxWidth: '600px', margin: '0 auto' }}>
       <h2>Issuer Portal</h2>
-      <p style={{ marginBottom: '2rem' }}>Issue official credentials to students. Requires ISSUER_ROLE.</p>
+      <p style={{ marginBottom: '2rem' }}>Issue official credentials or revoke existing ones. Requires ISSUER_ROLE.</p>
 
       <div style={{ marginBottom: '2rem' }}>
         <WalletConnect onConnect={handleConnect} />
       </div>
+
+      {signer && isIssuer !== false && (
+        <div className="tab-container">
+          <button 
+            className={`tab-btn ${activeTab === 'issue' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('issue'); setStatus(null); }}
+          >
+            Issue Credential
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'revoke' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('revoke'); setStatus(null); }}
+          >
+            Revoke Credential
+          </button>
+        </div>
+      )}
 
       {status && (
         <div className={`alert ${status.type === 'success' ? 'alert-success' : 'alert-error'}`}>
@@ -148,7 +203,7 @@ export default function IssuerPortal() {
         </div>
       )}
 
-      {signer && isIssuer !== false && (
+      {signer && isIssuer !== false && activeTab === 'issue' && (
         <form onSubmit={handleIssue}>
           <h3 style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Personal Information</h3>
           <div className="form-group">
@@ -188,6 +243,26 @@ export default function IssuerPortal() {
           
           <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Processing...' : 'Sign & Issue Credential'}
+          </button>
+        </form>
+      )}
+
+      {signer && isIssuer !== false && activeTab === 'revoke' && (
+        <form onSubmit={handleRevoke}>
+          <div className="form-group">
+            <label>Credential ID (Token ID) to Revoke</label>
+            <input 
+              required 
+              type="text" 
+              className="form-input" 
+              placeholder="e.g. 1157920892..." 
+              value={revokeTokenId} 
+              onChange={(e) => setRevokeTokenId(e.target.value)} 
+            />
+          </div>
+          
+          <button type="submit" className="btn-danger" disabled={loading} style={{ width: '100%' }}>
+            {loading ? 'Processing...' : 'Revoke Permanently'}
           </button>
         </form>
       )}
