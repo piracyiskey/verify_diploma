@@ -8,7 +8,7 @@ TrustChain is a decentralized application (dApp) designed to allow educational i
 
 ## 🎥 Demo Video
 
-[▶️ **Watch the full TrustChain Demonstration Video Here**](https://drive.google.com/file/d/1OrJIvViV7CWvtL5OYZJ5okVORI8cQ5sj/view?usp=sharing)
+[![TrustChain Demo Video](frontend/screenshot/Thumbnail.png)](https://drive.google.com/file/d/1OrJIvViV7CWvtL5OYZJ5okVORI8cQ5sj/view?usp=sharing)
 
 ---
 
