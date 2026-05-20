@@ -4,6 +4,14 @@
 
 TrustChain is a decentralized application (dApp) designed to allow educational institutions and enterprises to securely issue, manage, and instantly verify digital credentials. By leveraging Ethereum Soulbound Tokens (SBTs) and decentralized IPFS storage, TrustChain eliminates third-party background checks and completely prevents credential fraud.
 
+---
+
+## 🎥 Demo Video
+
+[▶️ **Watch the full TrustChain Demonstration Video Here**](https://drive.google.com/file/d/1OrJIvViV7CWvtL5OYZJ5okVORI8cQ5sj/view?usp=sharing)
+
+---
+
 ## 🚀 Key Features
 
 *   **Soulbound Tokens (SBTs):** Credentials are non-transferable ERC-721 tokens. Once issued to a student's wallet, they belong to them forever and cannot be sold or traded.
@@ -16,7 +24,7 @@ TrustChain is a decentralized application (dApp) designed to allow educational i
 
 ## 🏗️ System Architecture
 
-![Architecture Diagram](https://placehold.co/800x400/141724/818cf8?text=System+Architecture+Diagram)
+![Architecture Diagram](frontend/screenshot/System.png)
 
 1.  **Frontend Interface:** Built with Next.js and Ethers.js for Web3 wallet interactions.
 2.  **Smart Contracts:** Solidity contracts managed and tested via Hardhat.
