@@ -1,6 +1,6 @@
 # TrustChain: Blockchain-Based Credential Verification System
 
-![TrustChain Hero Banner](https://placehold.co/1200x400/0f111a/ffffff?text=TrustChain+-+Web3+Credential+Verification)
+![TrustChain Hero Banner](frontend/screenshot/Home.png)
 
 TrustChain is a decentralized application (dApp) designed to allow educational institutions and enterprises to securely issue, manage, and instantly verify digital credentials. By leveraging Ethereum Soulbound Tokens (SBTs) and decentralized IPFS storage, TrustChain eliminates third-party background checks and completely prevents credential fraud.
 
@@ -28,20 +28,20 @@ TrustChain is a decentralized application (dApp) designed to allow educational i
 ## 🖥️ Portals Overview
 
 ### 1. The Issuer Portal
-![Issuer Portal Screenshot](https://placehold.co/800x450/1c2136/ec4899?text=Issuer+Portal+Screenshot)
+![Issuer Portal Screenshot](frontend/screenshot/Portal.png)
 *Designed exclusively for administrators.*
 *   Connect with an `ISSUER_ROLE` wallet.
 *   Input student details, encrypt sensitive data, and upload diploma files.
 *   Mint new SBT credentials or Permanently Revoke existing ones.
 
 ### 2. The Student Portfolio
-![Portfolio Screenshot](https://placehold.co/800x450/1c2136/10b981?text=Student+Portfolio+Screenshot)
+![Portfolio Screenshot](frontend/screenshot/Portfolio.png)
 *Designed for end-users and graduates.*
 *   Connect personal MetaMask wallet.
 *   View all earned Soulbound credentials, decrypt personal data, and access original IPFS documents.
 
 ### 3. The Verifier Tool
-![Verifier Screenshot](https://placehold.co/800x450/1c2136/818cf8?text=Verifier+Tool+Screenshot)
+![Verifier Screenshot](frontend/screenshot/Verifier.png)
 *Designed for employers and third-party verifiers.*
 *   Publicly accessible portal.
 *   Input a Credential ID to instantly ping the blockchain and verify its authenticity and current revocation status.
