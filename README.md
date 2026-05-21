@@ -1,5 +1,7 @@
 # TrustChain: Blockchain-Based Credential Verification System
 
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org) [![Ethers.js](https://img.shields.io/badge/Ethers.js-6594E0?style=for-the-badge&logo=ethereum&logoColor=white)](https://docs.ethers.io) [![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)](https://docs.soliditylang.org) [![IPFS](https://img.shields.io/badge/IPFS-009EE3?style=for-the-badge&logo=ipfs&logoColor=white)](https://ipfs.io) [![OpenZeppelin](https://img.shields.io/badge/OpenZeppelin-1A73E8?style=for-the-badge&logo=openzeppelin&logoColor=white)](https://openzeppelin.com)
+
 ![TrustChain Hero Banner](frontend/screenshot/Home.png)
 
 TrustChain is a decentralized application (dApp) designed to allow educational institutions and enterprises to securely issue, manage, and instantly verify digital credentials. By leveraging Ethereum Soulbound Tokens (SBTs) and decentralized IPFS storage, TrustChain eliminates third-party background checks and completely prevents credential fraud.
