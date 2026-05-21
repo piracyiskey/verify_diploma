@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import CryptoJS from 'crypto-js';
 import WalletConnect from '@/components/WalletConnect';
 // @ts-ignore
 import contractData from '@/utils/CredentialSBT.json';
@@ -48,10 +47,35 @@ export default function PortfolioPage() {
 
         // Fetch IPFS Metadata (we can use an IPFS HTTP gateway)
         const gatewayUrl = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
-        let metadata = { name: 'Unknown', description: 'Failed to load metadata' };
+        let metadata: any = { name: 'Unknown', description: 'Failed to load metadata', attributes: [] };
         try {
           const res = await fetch(gatewayUrl);
           metadata = await res.json();
+
+          // Decrypt sensitive fields
+          if (metadata.attributes) {
+            for (let i = 0; i < metadata.attributes.length; i++) {
+              const attr = metadata.attributes[i];
+              const encryptedFields = ["Encrypted Identity", "Social Security Number", "GPA"];
+              if (encryptedFields.includes(attr.trait_type)) {
+                try {
+                  const decryptRes = await fetch('/api/decrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ encryptedData: attr.value })
+                  });
+                  const decryptData = await decryptRes.json();
+                  if (decryptRes.ok && decryptData.result) {
+                    attr.value = decryptData.result + " (Decrypted ✅)";
+                  } else {
+                    attr.value = attr.value + " (Encrypted 🔒)";
+                  }
+                } catch (e) {
+                  attr.value = attr.value + " (Encrypted 🔒)";
+                }
+              }
+            }
+          }
         } catch (e) {
           console.error("Failed to load metadata for URI", uri);
         }
@@ -138,15 +162,6 @@ export default function PortfolioPage() {
                <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                   {c.metadata.attributes.map((attr: any, i: number) => {
                     let displayValue = attr.value;
-                    const encryptedFields = ["Encrypted Identity", "Social Security Number", "GPA"];
-                    if (encryptedFields.includes(attr.trait_type)) {
-                        try {
-                           const bytes = CryptoJS.AES.decrypt(attr.value, 'TRUSTCHAIN_AES_KEY_2026');
-                           displayValue = bytes.toString(CryptoJS.enc.Utf8) + " (Decrypted)";
-                        } catch (e) {
-                           displayValue = attr.value + " (Encrypted)";
-                        }
-                    }
                     return (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
                         <span style={{ color: 'var(--text-muted)' }}>{attr.trait_type}:</span>

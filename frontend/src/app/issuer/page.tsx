@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import CryptoJS from 'crypto-js';
 import WalletConnect from '@/components/WalletConnect';
 // We will assume the contract address is available locally, we can deploy it later in demo script
 import contractData from '@/utils/CredentialSBT.json';
@@ -78,11 +77,23 @@ export default function IssuerPortal() {
       
       const fileHash = await file.arrayBuffer().then(buf => crypto.subtle.digest('SHA-256', buf)).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
 
-      // Encrypt sensitive data (AES)
+      // Encrypt sensitive data via server
       setStatus({ type: 'success', message: 'Encrypting sensitive data...' });
-      const encryptedName = CryptoJS.AES.encrypt(studentName, 'TRUSTCHAIN_AES_KEY_2026').toString();
-      const encryptedSsn = CryptoJS.AES.encrypt(ssn, 'TRUSTCHAIN_AES_KEY_2026').toString();
-      const encryptedGpa = CryptoJS.AES.encrypt(gpa, 'TRUSTCHAIN_AES_KEY_2026').toString();
+      
+      const encryptData = async (text: string) => {
+        const res = await fetch('/api/encrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Encryption failed');
+        return data.result;
+      };
+
+      const encryptedName = await encryptData(studentName);
+      const encryptedSsn = await encryptData(ssn);
+      const encryptedGpa = await encryptData(gpa);
 
       const metadataObj = {
         name: `Credential for ${major}`,
